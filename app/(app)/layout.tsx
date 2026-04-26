@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app-sidebar";
 import { signOut } from "@/app/auth/actions";
 import { canAccessApp } from "@/lib/access";
+import { resolveSidebarUser } from "@/lib/display-user";
 
 export default async function ProtectedAppLayout({
   children,
@@ -19,8 +20,19 @@ export default async function ProtectedAppLayout({
   if (!paid) {
     redirect("/pricing");
   }
-  const displayName = user.email?.split("@")[0] ?? "Creator";
-  const initials = displayName.slice(0, 2).toUpperCase();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const meta = user.user_metadata as Record<string, unknown> | undefined;
+  const { displayName, initials } = resolveSidebarUser({
+    email: user.email,
+    profileFullName: profile?.full_name,
+    metadataFullName: meta?.full_name ?? meta?.name,
+  });
 
   return (
     <main className="min-h-screen px-4 py-6 md:px-8 md:py-8">
@@ -34,7 +46,10 @@ export default async function ProtectedAppLayout({
                   {initials}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm">{displayName}</p>
+                  <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                  {user.email ? (
+                    <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                  ) : null}
                 </div>
               </div>
               <form action={signOut}>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { FeedbackWidget } from "@/components/feedback-widget";
+import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,11 @@ export default async function RootLayout({
   const cookieTheme = cookieStore.get("creatoros-theme")?.value;
   const initialTheme: ThemeId = isTheme(cookieTheme) ? cookieTheme : "light";
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html
       lang="en"
@@ -44,7 +50,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full bg-background text-foreground font-sans">
         {children}
-        <FeedbackWidget />
+        {user ? <FeedbackWidget /> : null}
       </body>
     </html>
   );

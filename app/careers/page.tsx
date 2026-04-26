@@ -26,7 +26,8 @@ const ROLES: Role[] = [
 ];
 
 const FOUNDER_LINKEDIN_URL = "https://www.linkedin.com/in/jeremiahtaylor614/";
-const FOUNDER_PHOTO_URL = "https://unavatar.io/linkedin/jeremiahtaylor614";
+const FOUNDER_PHOTO_URL =
+  "https://media.licdn.com/dms/image/v2/D5603AQGfRyc1CCwyog/profile-displayphoto-scale_200_200/B56Z3KbCb6IsAY-/0/1777217585269?e=2147483647&v=beta&t=cqYzyKUDyqqdyd1tu-xy4xoKkELxCv6iE_aCUyWGk6A";
 
 export default function CareersPage() {
   return (
@@ -51,11 +52,14 @@ export default function CareersPage() {
             You&apos;d be co-founding with me, so you should know who I am.
           </p>
 
-          <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-start">
+          <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center">
             <img
               src={FOUNDER_PHOTO_URL}
               alt="Jeremiah Taylor"
-              className="h-20 w-20 rounded-xl border object-cover"
+              width={80}
+              height={80}
+              referrerPolicy="no-referrer"
+              className="h-20 w-20 shrink-0 rounded-full border-2 border-border object-cover shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
             />
             <div className="min-w-0">
               <p className="text-base font-semibold">Jeremiah Taylor</p>

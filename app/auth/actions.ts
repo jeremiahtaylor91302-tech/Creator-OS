@@ -27,9 +27,18 @@ export async function signUp(formData: FormData) {
   const origin = (await headers()).get("origin");
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
+  const fullName = formData.get("full_name")?.toString().trim() ?? "";
 
   if (!email || !password) {
     return encodedRedirect("error", "/auth/sign-in", "Email and password required.");
+  }
+
+  if (!fullName || fullName.length < 2) {
+    return encodedRedirect("error", "/auth/sign-in", "Please enter your full name (at least 2 characters).");
+  }
+
+  if (fullName.length > 120) {
+    return encodedRedirect("error", "/auth/sign-in", "Full name is too long.");
   }
 
   const supabase = await createClient();
@@ -38,6 +47,9 @@ export async function signUp(formData: FormData) {
     password,
     options: {
       emailRedirectTo: `${origin}/auth/callback`,
+      data: {
+        full_name: fullName,
+      },
     },
   });
 

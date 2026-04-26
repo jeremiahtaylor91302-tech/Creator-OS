@@ -17,9 +17,26 @@ export function AuthForm() {
           name="email"
           type="email"
           required
+          autoComplete="email"
           className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none ring-accent/40 focus:ring"
           placeholder="you@example.com"
         />
+      </div>
+      <div className="space-y-2">
+        <label htmlFor="full_name" className="text-sm text-muted-foreground">
+          Full name
+        </label>
+        <input
+          id="full_name"
+          name="full_name"
+          type="text"
+          autoComplete="name"
+          className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none ring-accent/40 focus:ring"
+          placeholder="Alex Rivera"
+        />
+        <p className="text-xs text-muted-foreground">
+          Required when you create an account. Used in your dashboard.
+        </p>
       </div>
       <div className="space-y-2">
         <label htmlFor="password" className="text-sm text-muted-foreground">
@@ -31,6 +48,7 @@ export function AuthForm() {
             name="password"
             type={showPassword ? "text" : "password"}
             required
+            autoComplete="current-password"
             className="w-full rounded-lg border bg-background px-3 py-2 pr-10 text-sm outline-none ring-accent/40 focus:ring"
             placeholder="••••••••"
           />
