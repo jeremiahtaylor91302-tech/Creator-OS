@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { OauthConnectLink } from "@/components/oauth-connect-link";
 import {
   addDashboardOnboardingSeconds,
   registerDashboardOnboardingVisit,
@@ -95,15 +96,27 @@ export function DashboardOnboardingChecklist({
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">{step.description}</p>
             </div>
-            <Link
-              href={step.href}
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-foreground transition hover:border-accent/40 hover:bg-accent/10"
-            >
-              Go
-              <span aria-hidden="true" className="text-accent">
-                →
-              </span>
-            </Link>
+            {step.href.startsWith("/oauth/") ? (
+              <OauthConnectLink
+                href={step.href}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-foreground no-underline transition hover:border-accent/40 hover:bg-accent/10"
+              >
+                Go
+                <span aria-hidden="true" className="text-accent">
+                  →
+                </span>
+              </OauthConnectLink>
+            ) : (
+              <Link
+                href={step.href}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-foreground transition hover:border-accent/40 hover:bg-accent/10"
+              >
+                Go
+                <span aria-hidden="true" className="text-accent">
+                  →
+                </span>
+              </Link>
+            )}
           </li>
         ))}
       </ul>

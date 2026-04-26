@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { OauthConnectLink } from "@/components/oauth-connect-link";
 
 type CalendarSnapshot = {
   connected: boolean;
@@ -174,13 +175,23 @@ export function DashboardMainOverview(props: {
         <p className="text-xs uppercase tracking-[0.14em] text-accent">Next action</p>
         <h3 className="mt-2 text-lg font-semibold">{nextAction.title}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{nextAction.body}</p>
-        <Link
-          href={nextAction.href}
-          className="mt-4 inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black transition hover:bg-accent-strong"
-        >
-          {nextAction.cta}
-          <span aria-hidden="true">→</span>
-        </Link>
+        {nextAction.href.startsWith("/oauth/") ? (
+          <OauthConnectLink
+            href={nextAction.href}
+            className="mt-4 inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black no-underline transition hover:bg-accent-strong"
+          >
+            {nextAction.cta}
+            <span aria-hidden="true">→</span>
+          </OauthConnectLink>
+        ) : (
+          <Link
+            href={nextAction.href}
+            className="mt-4 inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black transition hover:bg-accent-strong"
+          >
+            {nextAction.cta}
+            <span aria-hidden="true">→</span>
+          </Link>
+        )}
       </article>
 
       <article id="dashboard-schedule" className="rounded-2xl border bg-surface-muted/70 p-5">

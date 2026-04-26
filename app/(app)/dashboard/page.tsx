@@ -101,7 +101,7 @@ export default async function DashboardPage(props: { searchParams: DashboardSear
       id: "platform",
       title: "Connect your first platform",
       description: "Link where you already post so everything lives in one calm place.",
-      href: "/settings",
+      href: "/oauth/youtube/start",
       done: newUserPreviewActive ? false : stepPlatform,
     },
     {

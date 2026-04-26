@@ -31,7 +31,15 @@ export default async function YouTubePage() {
         <section className="rounded-2xl border bg-gradient-to-br from-surface to-surface-muted p-6">
           <h1 className="text-2xl font-semibold">YouTube</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Connect YouTube on the Connections page to unlock channel analytics and top video insights.
+            Connect your YouTube account to unlock channel analytics and top video insights.
+          </p>
+          <p className="mt-4">
+            <a
+              href="/oauth/youtube/start"
+              className="inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black no-underline shadow-sm transition hover:bg-accent-strong"
+            >
+              Connect YouTube
+            </a>
           </p>
         </section>
       </div>
