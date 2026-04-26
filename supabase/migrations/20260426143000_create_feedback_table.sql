@@ -1,4 +1,10 @@
-create type public.feedback_type as enum ('feature', 'bug');
+do $$
+begin
+  create type public.feedback_type as enum ('feature', 'bug');
+exception
+  when duplicate_object then null;
+end
+$$;
 
 create table if not exists public.feedback (
   id uuid primary key default gen_random_uuid(),
@@ -14,12 +20,14 @@ create index if not exists idx_feedback_user_id on public.feedback(user_id);
 
 alter table public.feedback enable row level security;
 
+drop policy if exists "Authenticated users can insert feedback" on public.feedback;
 create policy "Authenticated users can insert feedback"
 on public.feedback
 for insert
 to authenticated
 with check (true);
 
+drop policy if exists "Users can read their own feedback" on public.feedback;
 create policy "Users can read their own feedback"
 on public.feedback
 for select

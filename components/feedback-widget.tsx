@@ -1,7 +1,8 @@
 "use client";
 
+import { VoiceDictationButton } from "@/components/voice-dictation-button";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 type Tab = "feature" | "bug";
 
@@ -19,6 +20,18 @@ export function FeedbackWidget() {
     if (typeof window === "undefined") return pathname ?? "/";
     return window.location.href;
   }, [pathname]);
+
+  const appendFeature = useCallback((snippet: string) => {
+    const t = snippet.trim();
+    if (!t) return;
+    setFeatureMessage((prev) => (!prev.trim() ? t : `${prev.trimEnd()} ${t}`));
+  }, []);
+
+  const appendBug = useCallback((snippet: string) => {
+    const t = snippet.trim();
+    if (!t) return;
+    setBugMessage((prev) => (!prev.trim() ? t : `${prev.trimEnd()} ${t}`));
+  }, []);
 
   async function submitFeature() {
     const message = featureMessage.trim();
@@ -122,7 +135,10 @@ export function FeedbackWidget() {
           {tab === "feature" ? (
             <div className="mt-3 space-y-3">
               <label className="space-y-1 text-xs text-muted-foreground">
-                <span>What would make Creator OS better for you?</span>
+                <span className="flex items-center justify-between gap-2">
+                  <span>What would make Creator OS better for you?</span>
+                  <VoiceDictationButton onAppend={appendFeature} />
+                </span>
                 <textarea
                   value={featureMessage}
                   onChange={(event) => setFeatureMessage(event.target.value)}
@@ -141,7 +157,10 @@ export function FeedbackWidget() {
           ) : (
             <div className="mt-3 space-y-3">
               <label className="space-y-1 text-xs text-muted-foreground">
-                <span>What happened?</span>
+                <span className="flex items-center justify-between gap-2">
+                  <span>What happened?</span>
+                  <VoiceDictationButton onAppend={appendBug} />
+                </span>
                 <textarea
                   value={bugMessage}
                   onChange={(event) => setBugMessage(event.target.value)}

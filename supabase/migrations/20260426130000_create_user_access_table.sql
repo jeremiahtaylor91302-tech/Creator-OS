@@ -17,16 +17,19 @@ for each row execute function public.handle_updated_at();
 
 alter table public.user_access enable row level security;
 
+drop policy if exists "Users can view their own access" on public.user_access;
 create policy "Users can view their own access"
 on public.user_access
 for select
 using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert their own access" on public.user_access;
 create policy "Users can insert their own access"
 on public.user_access
 for insert
 with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update their own access" on public.user_access;
 create policy "Users can update their own access"
 on public.user_access
 for update

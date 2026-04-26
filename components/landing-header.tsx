@@ -7,14 +7,12 @@ import { createPortal } from "react-dom";
 
 type LandingHeaderProps = {
   publicSuffix: string;
-  showLoggedInNav: boolean;
   isLoggedIn: boolean;
   isVisitorView: boolean;
 };
 
 export function LandingHeader({
   publicSuffix,
-  showLoggedInNav,
   isLoggedIn,
   isVisitorView,
 }: LandingHeaderProps) {
@@ -45,8 +43,8 @@ export function LandingHeader({
     };
   }, [menuOpen]);
 
-  const primaryHref = showLoggedInNav ? "/dashboard" : `/auth/sign-in${isVisitorView ? "?next=/" : ""}`;
-  const primaryLabel = showLoggedInNav ? "Go to dashboard" : "Get started free";
+  const primaryHref = isLoggedIn ? "/dashboard" : `/auth/sign-in${isVisitorView ? "?next=/" : ""}`;
+  const primaryLabel = isLoggedIn ? "Go to dashboard" : "Get started free";
 
   const mobileMenu =
     menuOpen && mounted ? (
@@ -81,12 +79,17 @@ export function LandingHeader({
             <MobileRow href={`/careers${publicSuffix}`} onNavigate={close}>
               Careers
             </MobileRow>
-            {!showLoggedInNav && (
+            {!isLoggedIn && (
               <MobileRow
                 href={`/auth/sign-in${isVisitorView ? "?next=/" : ""}`}
                 onNavigate={close}
               >
                 Sign in
+              </MobileRow>
+            )}
+            {isLoggedIn && isVisitorView && (
+              <MobileRow href="/dashboard" onNavigate={close}>
+                Go to dashboard
               </MobileRow>
             )}
             {isLoggedIn && (
@@ -141,12 +144,20 @@ export function LandingHeader({
           >
             Careers
           </Link>
-          {!showLoggedInNav && (
+          {!isLoggedIn && (
             <Link
               href={`/auth/sign-in${isVisitorView ? "?next=/" : ""}`}
               className="whitespace-nowrap font-medium text-muted-foreground transition hover:text-foreground"
             >
               Sign in
+            </Link>
+          )}
+          {isLoggedIn && isVisitorView && (
+            <Link
+              href="/dashboard"
+              className="whitespace-nowrap font-medium text-muted-foreground transition hover:text-foreground"
+            >
+              Go to dashboard
             </Link>
           )}
           {isLoggedIn && (

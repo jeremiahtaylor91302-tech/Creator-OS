@@ -1,7 +1,20 @@
 create extension if not exists "pgcrypto";
 
-create type platform_name as enum ('youtube', 'tiktok', 'instagram', 'twitter');
-create type platform_connection_status as enum ('pending', 'connected', 'failed');
+do $$
+begin
+  create type platform_name as enum ('youtube', 'tiktok', 'instagram', 'twitter');
+exception
+  when duplicate_object then null;
+end
+$$;
+
+do $$
+begin
+  create type platform_connection_status as enum ('pending', 'connected', 'failed');
+exception
+  when duplicate_object then null;
+end
+$$;
 
 create table if not exists public.platform_connections (
   id uuid primary key default gen_random_uuid(),
@@ -45,22 +58,26 @@ execute function public.handle_platform_connections_updated_at();
 
 alter table public.platform_connections enable row level security;
 
+drop policy if exists "Users can select their own platform connections" on public.platform_connections;
 create policy "Users can select their own platform connections"
 on public.platform_connections
 for select
 using (auth.uid() = user_id);
 
+drop policy if exists "Users can insert their own platform connections" on public.platform_connections;
 create policy "Users can insert their own platform connections"
 on public.platform_connections
 for insert
 with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update their own platform connections" on public.platform_connections;
 create policy "Users can update their own platform connections"
 on public.platform_connections
 for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
+drop policy if exists "Users can delete their own platform connections" on public.platform_connections;
 create policy "Users can delete their own platform connections"
 on public.platform_connections
 for delete

@@ -1,10 +1,27 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
+import { createClient } from "@/lib/supabase/server";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+function safeNextPath(raw: string | string[] | undefined): string | null {
+  if (typeof raw !== "string" || !raw.startsWith("/") || raw.startsWith("//")) {
+    return null;
+  }
+  return raw;
+}
+
 export default async function SignInPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    redirect(safeNextPath(searchParams.next) ?? "/dashboard");
+  }
+
   const errorMessage =
     typeof searchParams.error === "string" ? searchParams.error : null;
   const successMessage =

@@ -56,11 +56,13 @@ execute function public.handle_new_user_profile();
 
 alter table public.profiles enable row level security;
 
+drop policy if exists "Users can read own profile" on public.profiles;
 create policy "Users can read own profile"
 on public.profiles
 for select
 using (auth.uid() = id);
 
+drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"
 on public.profiles
 for update

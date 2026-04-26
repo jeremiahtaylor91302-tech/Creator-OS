@@ -1,8 +1,8 @@
 "use server";
 
+import { resolveAppBaseUrlFromServerHeaders } from "@/lib/app-base-url";
 import { encodedRedirect } from "@/utils/encoded-redirect";
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function signIn(formData: FormData) {
@@ -24,7 +24,7 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
-  const origin = (await headers()).get("origin");
+  const appOrigin = await resolveAppBaseUrlFromServerHeaders();
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
   const fullName = formData.get("full_name")?.toString().trim() ?? "";
@@ -46,7 +46,7 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${appOrigin}/auth/callback`,
       data: {
         full_name: fullName,
       },

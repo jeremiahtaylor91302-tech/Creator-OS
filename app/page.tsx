@@ -16,10 +16,9 @@ export default async function Home(props: { searchParams: SearchParams }) {
   } = await supabase.auth.getUser();
   const isLoggedIn = Boolean(user);
   const isVisitorView = searchParams.visitor === "1";
-  const showLoggedInNav = isLoggedIn && !isVisitorView;
   const publicSuffix = isVisitorView ? "?visitor=1" : "";
 
-  const ctaHref = signInHref(isVisitorView);
+  const ctaHref = isLoggedIn ? "/dashboard" : signInHref(isVisitorView);
 
   const whatYouGet = [
     {
@@ -45,7 +44,6 @@ export default async function Home(props: { searchParams: SearchParams }) {
       <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-1 flex-col gap-10 sm:max-w-3xl sm:gap-12 md:max-w-4xl">
         <LandingHeader
           publicSuffix={publicSuffix}
-          showLoggedInNav={showLoggedInNav}
           isLoggedIn={isLoggedIn}
           isVisitorView={isVisitorView}
         />
