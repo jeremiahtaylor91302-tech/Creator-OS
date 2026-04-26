@@ -40,6 +40,14 @@ export const TRACKING_PLATFORM_LABELS: Record<TrackingPlatform, string> = {
   substack: "Substack",
 };
 
+/** Short benefit line for OAuth platforms (Settings + connection cards). */
+export const PLATFORM_OAUTH_BENEFIT_LINES: Partial<Record<Platform, string>> = {
+  youtube: "Track subscribers, views, and which videos are driving growth.",
+  tiktok: "See what's blowing up — views, likes, and follower trends.",
+  instagram: "Monitor your reach, reels performance, and audience growth.",
+  twitter: "Track impressions, engagement, and what's resonating.",
+};
+
 export const PLATFORM_COLORS: Record<Platform, string> = {
   youtube: "bg-red-500/20 text-red-200",
   tiktok: "bg-slate-500/20 text-slate-200",
