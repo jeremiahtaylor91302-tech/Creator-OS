@@ -9,6 +9,7 @@ import { formatOAuthError, formatOAuthSuccess } from "@/utils/oauth-message";
 import { PlatformConnectionCard } from "@/components/platform-connection-card";
 import { BrandBaselineSettings } from "@/components/brand-baseline-settings";
 import { TimeBudgetSettings } from "@/components/time-budget-settings";
+import { GoogleCalendarConnectButton } from "@/components/google-calendar-connect-button";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -118,12 +119,9 @@ export default async function SettingsPage(props: { searchParams: SearchParams }
                 Sync filming, editing, and publishing blocks into weekly production tracking.
               </p>
             </div>
-            <a
-              href="/oauth/google-calendar/start"
-              className="rounded-lg bg-gradient-to-r from-accent to-accent-strong px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90"
-            >
-              {calendarConnection?.status === "connected" ? "Reconnect" : "Connect"}
-            </a>
+            <GoogleCalendarConnectButton
+              connected={calendarConnection?.status === "connected"}
+            />
           </div>
         </div>
         {calendarConnection?.last_error && (

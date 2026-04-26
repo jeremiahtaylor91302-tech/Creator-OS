@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Platform } from "@/lib/platforms";
 import { PLATFORM_LABELS } from "@/lib/platforms";
 
@@ -47,6 +46,11 @@ const fallbackTheme = {
   iconBg: "bg-zinc-500/15 text-zinc-300",
 };
 
+/** CSS-only shadows avoid inline style recalculation on interaction (INP). */
+const cardShadowConnected =
+  "[box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.05),inset_0_0_22px_-14px_rgba(236,236,241,0.14),0_10px_24px_-22px_rgba(255,255,255,0.1)]";
+const cardShadowIdle = "[box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.02)]";
+
 export function PlatformConnectionCard({
   platform,
   status,
@@ -67,14 +71,9 @@ export function PlatformConnectionCard({
 
   return (
     <article
-      className="rounded-2xl bg-surface-muted/70 p-4"
-      style={{
-        background: "var(--color-surface-muted)",
-        boxShadow:
-          status === "connected"
-            ? `inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 0 20px -14px ${theme.glow}, 0 10px 24px -22px rgba(255,255,255,0.12)`
-            : "inset 0 0 0 1px rgba(255,255,255,0.02)",
-      }}
+      className={`rounded-2xl bg-surface-muted/70 p-4 ${
+        status === "connected" ? cardShadowConnected : cardShadowIdle
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -99,12 +98,12 @@ export function PlatformConnectionCard({
           {actionLabel}
         </span>
       ) : (
-        <Link
+        <a
           href={actionHref}
-          className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black transition hover:opacity-90"
+          className="mt-4 inline-flex w-full touch-manipulation items-center justify-center rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black no-underline transition hover:opacity-90 active:opacity-90"
         >
           {actionLabel}
-        </Link>
+        </a>
       )}
     </article>
   );

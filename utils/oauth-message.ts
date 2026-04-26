@@ -14,6 +14,17 @@ export function formatOAuthError(error: string | null) {
     return "YouTube OAuth credentials are missing in .env.local.";
   }
 
+  if (
+    error.includes("redirect_uri_mismatch") ||
+    error.includes("redirect_uri") && error.toLowerCase().includes("invalid")
+  ) {
+    return "Google OAuth redirect URI mismatch. In Google Cloud Console → Credentials → your OAuth client, add this exact Authorized redirect URI: https://YOUR_DOMAIN/oauth/google-calendar/callback (use your real APP_URL / production domain).";
+  }
+
+  if (error.includes("Calendar connect") || error.includes("google_calendar_connections")) {
+    return error;
+  }
+
   if (error.includes('invalid input value for enum platform_name: "podcast"')) {
     return "Podcast support needs a one-time Supabase enum update. Run: alter type platform_name add value if not exists 'podcast';";
   }

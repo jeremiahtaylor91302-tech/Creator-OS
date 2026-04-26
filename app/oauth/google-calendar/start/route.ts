@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const state = createState();
   const callbackUrl = `${resolveAppBaseUrl(request)}/oauth/google-calendar/callback`;
 
-  await supabase.from("google_calendar_connections").upsert(
+  const { error: upsertError } = await supabase.from("google_calendar_connections").upsert(
     {
       user_id: user.id,
       status: "pending",
@@ -36,6 +36,17 @@ export async function GET(request: Request) {
     },
     { onConflict: "user_id" },
   );
+
+  if (upsertError) {
+    return NextResponse.redirect(
+      new URL(
+        `/settings?error=${encodeURIComponent(
+          `Could not start Calendar connect: ${upsertError.message}. If this persists, confirm the google_calendar_connections table exists in Supabase.`,
+        )}`,
+        request.url,
+      ),
+    );
+  }
 
   try {
     const authorizationUrl = buildGoogleCalendarOAuthUrl(state, callbackUrl);
