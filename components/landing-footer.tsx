@@ -17,12 +17,6 @@ export function LandingFooter({ publicSuffix }: LandingFooterProps) {
           aria-label="Footer"
         >
           <Link
-            href={`/pricing${publicSuffix}`}
-            className="font-medium text-muted-foreground transition hover:text-foreground"
-          >
-            Pricing
-          </Link>
-          <Link
             href={`/careers${publicSuffix}`}
             className="font-medium text-muted-foreground transition hover:text-foreground"
           >

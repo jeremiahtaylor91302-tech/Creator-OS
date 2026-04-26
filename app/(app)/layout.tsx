@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/app-sidebar";
 import { FeedbackWidget } from "@/components/feedback-widget";
 import { signOut } from "@/app/auth/actions";
-import { canAccessApp } from "@/lib/access";
 import { resolveSidebarUser } from "@/lib/display-user";
 
 export default async function ProtectedAppLayout({
@@ -16,10 +15,6 @@ export default async function ProtectedAppLayout({
 
   if (!user) {
     redirect("/auth/sign-in?error=Please%20sign%20in%20first.");
-  }
-  const paid = await canAccessApp(user.id, user.email);
-  if (!paid) {
-    redirect("/pricing");
   }
 
   const { data: profile } = await supabase

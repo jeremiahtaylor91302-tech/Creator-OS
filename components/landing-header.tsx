@@ -45,8 +45,8 @@ export function LandingHeader({
     };
   }, [menuOpen]);
 
-  const primaryHref = showLoggedInNav ? "/dashboard" : `/pricing${publicSuffix}`;
-  const primaryLabel = showLoggedInNav ? "Go to dashboard" : "Get started";
+  const primaryHref = showLoggedInNav ? "/dashboard" : `/auth/sign-in${isVisitorView ? "?next=/" : ""}`;
+  const primaryLabel = showLoggedInNav ? "Go to dashboard" : "Get started free";
 
   const mobileMenu =
     menuOpen && mounted ? (
@@ -75,8 +75,8 @@ export function LandingHeader({
           aria-label="Main navigation"
         >
           <div className="mx-auto max-w-md divide-y divide-border/70">
-            <MobileRow href={`/pricing${publicSuffix}`} onNavigate={close}>
-              Pricing
+            <MobileRow href={`/blog${publicSuffix}`} onNavigate={close}>
+              Blog
             </MobileRow>
             <MobileRow href={`/careers${publicSuffix}`} onNavigate={close}>
               Careers
@@ -130,10 +130,10 @@ export function LandingHeader({
           aria-label="Main"
         >
           <Link
-            href={`/pricing${publicSuffix}`}
+            href={`/blog${publicSuffix}`}
             className="whitespace-nowrap font-medium text-muted-foreground transition hover:text-foreground"
           >
-            Pricing
+            Blog
           </Link>
           <Link
             href={`/careers${publicSuffix}`}

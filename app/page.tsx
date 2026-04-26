@@ -33,17 +33,17 @@ export default async function Home(props: { searchParams: SearchParams }) {
               Unified creator analytics
             </p>
             <h2 className="text-balance text-[1.35rem] font-semibold leading-snug tracking-tight sm:text-2xl sm:leading-tight md:text-4xl md:leading-tight">
-              Stop losing to the algorithm because life got busy.
+              Your Creator OS - Free Forever.
             </h2>
             <p className="text-pretty text-[0.9375rem] leading-relaxed text-muted-foreground sm:text-base">
-              Your content career shouldn&apos;t depend on whether you had a good week.
+              No waitlist. No credit card. The only cost is you actually have to use it.
             </p>
             <div className="flex w-full min-w-0 flex-col gap-3 md:flex-row md:flex-wrap md:gap-3">
               <Link
                 href="/auth/sign-in"
                 className="inline-flex h-12 w-full min-w-0 items-center justify-center rounded-xl bg-accent px-4 text-sm font-semibold text-black transition hover:bg-accent-strong active:scale-[0.99] md:h-auto md:w-auto md:rounded-lg md:py-2"
               >
-                Get started
+                Get Started Free
               </Link>
               <Link
                 href="/dashboard"
@@ -171,10 +171,10 @@ export default async function Home(props: { searchParams: SearchParams }) {
               Ready to stop disappearing on your audience?
             </h3>
             <Link
-              href={`/pricing${publicSuffix}`}
+              href={`/auth/sign-in${isVisitorView ? "?next=/" : ""}`}
               className="inline-flex h-12 w-full shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-accent to-accent-strong px-5 text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.99] md:h-auto md:w-auto md:rounded-lg md:py-3 md:active:scale-100"
             >
-              Get lifetime access for $59
+              Get Started Free
             </Link>
           </div>
         </section>
