@@ -135,8 +135,8 @@ export function FeedbackWidget() {
           {tab === "feature" ? (
             <div className="mt-3 space-y-3">
               <label className="space-y-1 text-xs text-muted-foreground">
-                <span className="flex items-center justify-between gap-2">
-                  <span>What would make Creator OS better for you?</span>
+                <span className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 pt-0.5">What would make Creator OS better for you?</span>
                   <VoiceDictationButton onAppend={appendFeature} />
                 </span>
                 <textarea
@@ -157,8 +157,8 @@ export function FeedbackWidget() {
           ) : (
             <div className="mt-3 space-y-3">
               <label className="space-y-1 text-xs text-muted-foreground">
-                <span className="flex items-center justify-between gap-2">
-                  <span>What happened?</span>
+                <span className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 pt-0.5">What happened?</span>
                   <VoiceDictationButton onAppend={appendBug} />
                 </span>
                 <textarea
