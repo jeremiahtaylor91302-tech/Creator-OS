@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface-2: #1a1a2e;
+            --surface-3: #252540;
+            --border: #2a2a3d;
+            --text: #e8e8f0;
+            --text-2: #9090a8;
+            --text-3: #606078;
+            --accent: #7c5cfc;
+            --accent-2: #9b7bff;
+            --green: #34d399;
+            --green-bg: rgba(52, 211, 153, 0.1);
+            --red: #f87171;
+            --red-bg: rgba(248, 113, 113, 0.1);
+            --yellow: #fbbf24;
+            --yellow-bg: rgba(251, 191, 36, 0.1);
+            --blue: #60a5fa;
+            --blue-bg: rgba(96, 165, 250, 0.1);
+            --pink: #f472b6;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* NAV */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-sync {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-2);
+        }
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 3rem 0 2rem;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff, var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            color: var(--text-2);
+            font-size: 1rem;
+        }
+
+        /* PLATFORM CARDS */
+        .platforms {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .platform-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            transition: all 0.2s;
+            cursor: default;
+        }
+        .platform-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .platform-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-2);
+        }
+        .platform-icon {
+            font-size: 1.2rem;
+        }
+        .platform-metric {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+        .platform-label {
+            font-size: 0.8rem;
+            color: var(--text-3);
+        }
+        .platform-secondary {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+        .platform-secondary span {
+            font-size: 0.75rem;
+            color: var(--text-3);
+        }
+        .platform-secondary strong {
+            color: var(--text-2);
+        }
+
+        /* GRID */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-2);
+            margin-bottom: 1.25rem;
+        }
+
+        /* CONTENT TABLE */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .content-table th {
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-3);
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .content-table td {
+            padding: 0.75rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(42, 42, 61, 0.5);
+            color: var(--text);
+        }
+        .content-table tr:hover td {
+            background: rgba(124, 92, 252, 0.03);
+        }
+        .platform-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .tag-youtube { background: rgba(255, 0, 0, 0.15); color: #ff4444; }
+        .tag-tiktok { background: rgba(0, 0, 0, 0.3); color: #fff; border: 1px solid var(--border); }
+        .tag-instagram { background: rgba(225, 48, 108, 0.15); color: #e1306c; }
+        .tag-twitter { background: rgba(29, 161, 242, 0.15); color: #1da1f2; }
+
+        /* CAPACITY */
+        .capacity-bar-container {
+            background: var(--surface-2);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .capacity-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        .capacity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(42, 42, 61, 0.3);
+        }
+        .capacity-item:last-child { border-bottom: none; }
+        .capacity-item-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .capacity-item-time {
+            font-size: 0.8rem;
+            color: var(--text-2);
+            font-weight: 600;
+        }
+
+        /* IDEAS */
+        .idea-form { margin-bottom: 1.5rem; }
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent);
+        }
+        input::placeholder, textarea::placeholder {
+            color: var(--text-3);
+        }
+        textarea { resize: vertical; min-height: 60px; }
+
+        .btn {
+            padding: 0.65rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #6c4ce0);
+            color: white;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(124, 92, 252, 0.3);
+        }
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+        }
+        .btn-green { background: var(--green-bg); color: var(--green); border: 1px solid rgba(52,211,153,0.2); }
+        .btn-red { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+        .btn-green:hover { background: rgba(52,211,153,0.2); }
+        .btn-red:hover { background: rgba(248,113,113,0.2); }
+
+        .idea-item {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+        .idea-item:hover {
+            border-color: var(--accent);
+        }
+        .idea-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+        .idea-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .idea-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-3);
+        }
+        .idea-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-queue { background: var(--yellow-bg); color: var(--yellow); }
+        .badge-committed { background: var(--green-bg); color: var(--green); }
+        .badge-locked { background: rgba(96,96,120,0.2); color: var(--text-3); }
+        .badge-done { background: var(--blue-bg); color: var(--blue); }
+
+        /* ROADMAP */
+        .milestone {
+            display: flex;
+            gap: 1rem;
+            padding: 1.25rem 0;
+            border-bottom: 1px solid rgba(42,42,61,0.3);
+        }
+        .milestone:last-child { border-bottom: none; }
+        .milestone-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .milestone-dot.active {
+            background: linear-gradient(135deg, var(--accent), var(--pink));
+        }
+        .milestone-dot.locked {
+            background: var(--surface-3);
+            color: var(--text-3);
+        }
+        .milestone-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        .milestone-desc {
+            font-size: 0.8rem;
+            color: var(--text-2);
+            margin-bottom: 0.25rem;
+        }
+        .milestone-unlock {
+            font-size: 0.75rem;
+            color: var(--text-3);
+            font-style: italic;
+        }
+        .progress-mini {
+            height: 4px;
+            background: var(--surface-3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+            max-width: 200px;
+        }
+        .progress-mini-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--pink));
+            border-radius: 2px;
+        }
+
+        /* THIS WEEK */
+        .week-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--surface-2);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .week-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .week-check.done {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .week-check.done::after {
+            content: '✓';
+            color: white;
+            font-size: 0.7rem;
+        }
+        .week-text {
+            font-size: 0.85rem;
+        }
+        .week-time {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--text-3);
+        }
+
+        /* EMPTY */
+        .empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-3);
+            font-size: 0.85rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .platforms { grid-template-columns: 1fr 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .platforms { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.8rem; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-logo">Creator OS</div>
+        <div class="nav-sync">
+            <div class="sync-dot"></div>
+            <span id="sync-status">Connecting...</span>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>Jeremiah Taylor</h1>
+        <p>Creator Business OS — 2 hrs/week, infinite potential</p>
+    </div>
+
+    <!-- PLATFORM STATS -->
+    <div class="platforms" id="platforms">
+        <div class="platform-card">
+            <div class="platform-header">
+                <span class="platform-name">YouTube</span>
+                <span class="platform-icon">▶️</span>
+            </div>
+            <div class="platform-metric" id="yt-subs">1,309</div>
+            <div class="platform-label">subscribers</div>
+            <div class="platform-secondary">
+                <span>Goal: <strong>5,000</strong></span>
+                <span><strong id="yt-progress">26%</strong></span>
+            </div>
+        </div>
+        <div class="platform-card">
+            <div class="platform-header">
+                <span class="platform-name">TikTok</span>
+                <span class="platform-icon">🎵</span>
+            </div>
+            <div class="platform-metric" id="tt-followers">215.7K</div>
+            <div class="platform-label">followers</div>
+            <div class="platform-secondary">
+                <span>Likes: <strong id="tt-likes">6.5M</strong></span>
+                <span><strong>Inactive</strong></span>
+            </div>
+        </div>
+        <div class="platform-card">
+            <div class="platform-header">
+                <span class="platform-name">Instagram</span>
+                <span class="platform-icon">📷</span>
+            </div>
+            <div class="platform-metric" id="ig-followers">637</div>
+            <div class="platform-label">followers</div>
+            <div class="platform-secondary">
+                <span>Posts: <strong>18</strong></span>
+                <span><strong>Most Active</strong></span>
+            </div>
+        </div>
+        <div class="platform-card">
+            <div class="platform-header">
+                <span class="platform-name">Twitter/X</span>
+                <span class="platform-icon">𝕏</span>
+            </div>
+            <div class="platform-metric" id="tw-followers">2,100</div>
+            <div class="platform-label">followers</div>
+            <div class="platform-secondary">
+                <span>Status: <strong>Inactive</strong></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID: CONTENT + CAPACITY -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">📊 Recent Content Performance</div>
+            <table class="content-table" id="content-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Platform</th>
+                        <th>Views</th>
+                        <th>Likes</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="content-body">
+                    <tr><td colspan="5" class="empty">Loading content...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-title">⏱️ Weekly Capacity (120 min)</div>
+                <div id="capacity-display">
+                    <div class="empty">Loading...</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📋 This Week</div>
+                <div class="week-item">
+                    <div class="week-check" onclick="this.classList.toggle('done')"></div>
+                    <span class="week-text">YouTube Short #1 (Original)</span>
+                    <span class="week-time">20 min</span>
+                </div>
+                <div class="week-item">
+                    <div class="week-check" onclick="this.classList.toggle('done')"></div>
+                    <span class="week-text">YouTube Short #2 (Bruno Mars)</span>
+                    <span class="week-time">20 min</span>
+                </div>
+                <div class="week-item">
+                    <div class="week-check" onclick="this.classList.toggle('done')"></div>
+                    <span class="week-text">Instagram Story</span>
+                    <span class="week-time">10 min</span>
+                </div>
+                <div class="week-item">
+                    <div class="week-check" onclick="this.classList.toggle('done')"></div>
+                    <span class="week-text">Repurpose Shorts → TikTok</span>
+                    <span class="week-time">5 min</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IDEAS + ROADMAP -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">💡 Idea Pressure Test</div>
+            <form class="idea-form" id="idea-form">
+                <div class="form-row">
+                    <input type="text" id="idea-title" placeholder="Idea title (e.g., Start a podcast)" required>
+                    <input type="number" id="idea-time" placeholder="Minutes" required>
+                </div>
+                <textarea id="idea-desc" placeholder="Quick description (optional)"></textarea>
+                <div style="height: 0.75rem;"></div>
+                <button type="submit" class="btn btn-primary">Submit for Pressure Test</button>
+            </form>
+
+            <div id="ideas-queue" style="margin-bottom: 1.5rem;"></div>
+            <div id="ideas-committed"></div>
+            <div id="ideas-locked"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🗺️ Unlock Roadmap</div>
+
+            <div class="milestone">
+                <div class="milestone-dot active">✓</div>
+                <div>
+                    <div class="milestone-title">YouTube Shorts Focus</div>
+                    <div class="milestone-desc">2 shorts/week + Instagram stories</div>
+                    <div class="milestone-unlock">You are here</div>
+                </div>
+            </div>
+
+            <div class="milestone">
+                <div class="milestone-dot locked">🔒</div>
+                <div>
+                    <div class="milestone-title">Podcast Launch</div>
+                    <div class="milestone-desc">Journalism + activism podcast</div>
+                    <div class="milestone-unlock">Unlock at 5K YouTube subs</div>
+                    <div class="progress-mini">
+                        <div class="progress-mini-fill" style="width: 26%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="milestone">
+                <div class="milestone-dot locked">🔒</div>
+                <div>
+                    <div class="milestone-title">Beauty + Fitness Content</div>
+                    <div class="milestone-desc">Beauty series + Iron Man fitness tracker</div>
+                    <div class="milestone-unlock">Unlock after podcast foundation</div>
+                </div>
+            </div>
+
+            <div class="milestone">
+                <div class="milestone-dot locked">🔒</div>
+                <div>
+                    <div class="milestone-title">Full Creator Empire</div>
+                    <div class="milestone-desc">All platforms, brand deals, revenue streams</div>
+                    <div class="milestone-unlock">Unlock: Consistent momentum</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--surface-2); border-radius: 8px;">
+                <div style="font-size: 0.8rem; color: var(--text-2); line-height: 1.6;">
+                    <strong style="color: var(--accent);">The rule:</strong> You can dream about everything. You can only DO what fits in 2 hours/week. Everything else stays locked until you hit the milestone.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REVENUE -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-title">💰 Revenue Tracker</div>
+        <div id="revenue-display" class="empty">No revenue tracked yet. Add your first brand deal or payment above.</div>
+    </div>
+
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-3); font-size: 0.8rem;">
+        Creator OS — Built by Jeremiah Taylor
+    </div>
+
+</div>
+
+<script>
+    // ===== SUPABASE CONNECTION =====
+    const SUPABASE_URL = 'https://oufwzbbzmlwujlhbzrrv.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_pj1djqACkW1GKtiRVMB-HQ_Ri66uke5';
+    
+    let db;
+    try {
+        const { createClient } = window.supabase;
+        db = createClient(SUPABASE_URL, SUPABASE_KEY);
+        document.getElementById('sync-status').textContent = 'Connected to Supabase';
+    } catch(e) {
+        document.getElementById('sync-status').textContent = 'Offline mode';
+    }
+
+    // ===== FORMAT HELPERS =====
+    function fmt(n) {
+        if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+        return n.toLocaleString();
+    }
+
+    function timeAgo(date) {
+        const d = new Date(date);
+        const now = new Date();
+        const diff = Math.floor((now - d) / 86400000);
+        if (diff === 0) return 'Today';
+        if (diff === 1) return 'Yesterday';
+        if (diff < 7) return diff + 'd ago';
+        if (diff < 30) return Math.floor(diff/7) + 'w ago';
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function platformTag(p) {
+        const cls = {
+            youtube: 'tag-youtube',
+            tiktok: 'tag-tiktok',
+            instagram: 'tag-instagram',
+            twitter: 'tag-twitter'
+        };
+        return `<span class="platform-tag ${cls[p] || ''}">${p}</span>`;
+    }
+
+    function statusBadge(s) {
+        return `<span class="status-badge badge-${s}">${s}</span>`;
+    }
+
+    // ===== LOAD PLATFORM STATS =====
+    async function loadPlatformStats() {
+        if (!db) return;
+        try {
+            const { data } = await db.from('platform_stats')
+                .select('*')
+                .order('recorded_at', { ascending: false });
+            
+            if (!data || data.length === 0) return;
+
+            const latest = {};
+            data.forEach(row => {
+                const key = row.platform + '_' + row.metric_name;
+                if (!latest[key]) latest[key] = row;
+            });
+
+            if (latest['youtube_subscribers']) {
+                const val = latest['youtube_subscribers'].metric_value;
+                document.getElementById('yt-subs').textContent = fmt(val);
+                document.getElementById('yt-progress').textContent = Math.round((val/5000)*100) + '%';
+            }
+            if (latest['tiktok_followers']) {
+                document.getElementById('tt-followers').textContent = fmt(latest['tiktok_followers'].metric_value);
+            }
+            if (latest['tiktok_total_likes']) {
+                document.getElementById('tt-likes').textContent = fmt(latest['tiktok_total_likes'].metric_value);
+            }
+            if (latest['instagram_followers']) {
+                document.getElementById('ig-followers').textContent = fmt(latest['instagram_followers'].metric_value);
+            }
+            if (latest['twitter_followers']) {
+                document.getElementById('tw-followers').textContent = fmt(latest['twitter_followers'].metric_value);
+            }
+
+            document.getElementById('sync-status').textContent = 'Live — synced';
+        } catch(e) {
+            console.error('Stats error:', e);
+        }
+    }
+
+    // ===== LOAD CONTENT =====
+    async function loadContent() {
+        if (!db) return;
+        try {
+            const { data } = await db.from('content')
+                .select('*')
+                .order('published_at', { ascending: false })
+                .limit(10);
+
+            const tbody = document.getElementById('content-body');
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty">No content synced yet. YouTube data will appear here after first sync.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(c => `
+                <tr>
+                    <td style="font-weight: 500;">${c.title}</td>
+                    <td>${platformTag(c.platform)}</td>
+                    <td>${fmt(c.views)}</td>
+                    <td>${fmt(c.likes)}</td>
+                    <td style="color: var(--text-3);">${c.published_at ? timeAgo(c.published_at) : '—'}</td>
+                </tr>
+            `).join('');
+        } catch(e) {
+            console.error('Content error:', e);
+        }
+    }
+
+    // ===== LOAD IDEAS =====
+    async function loadIdeas() {
+        if (!db) return;
+        try {
+            const { data } = await db.from('ideas')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const queue = (data || []).filter(i => i.status === 'queue');
+            const committed = (data || []).filter(i => i.status === 'committed');
+            const locked = (data || []).filter(i => i.status === 'locked');
+
+            // Queue
+            document.getElementById('ideas-queue').innerHTML = queue.length ? 
+                '<div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--yellow);margin-bottom:0.75rem;">Awaiting Decision</div>' +
+                queue.map(i => `
+                    <div class="idea-item">
+                        <div class="idea-top">
+                            <span class="idea-title">${i.title}</span>
+                            ${statusBadge('queue')}
+                        </div>
+                        <div class="idea-meta">
+                            <span>${i.time_estimate} min</span>
+                            ${i.description ? '<span>' + i.description.substring(0,50) + '</span>' : ''}
+                        </div>
+                        <div class="idea-actions">
+                            <button class="btn btn-sm btn-green" onclick="updateIdea('${i.id}','committed')">✓ Commit</button>
+                            <button class="btn btn-sm btn-red" onclick="lockIdea('${i.id}')">✗ Lock</button>
+                        </div>
+                    </div>
+                `).join('') : '';
+
+            // Committed
+            document.getElementById('ideas-committed').innerHTML = committed.length ?
+                '<div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--green);margin-bottom:0.75rem;">Committed</div>' +
+                committed.map(i => `
+                    <div class="idea-item" style="border-color: rgba(52,211,153,0.2);">
+                        <div class="idea-top">
+                            <span class="idea-title">${i.title}</span>
+                            ${statusBadge('committed')}
+                        </div>
+                        <div class="idea-meta">
+                            <span>${i.time_estimate} min/week</span>
+                        </div>
+                    </div>
+                `).join('') : '';
+
+            // Locked
+            document.getElementById('ideas-locked').innerHTML = locked.length ?
+                '<div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-3);margin-bottom:0.75rem;">Locked</div>' +
+                locked.map(i => `
+                    <div class="idea-item" style="opacity: 0.6;">
+                        <div class="idea-top">
+                            <span class="idea-title">${i.title}</span>
+                            ${statusBadge('locked')}
+                        </div>
+                        <div class="idea-meta">
+                            <span>${i.time_estimate} min</span>
+                            ${i.unlock_condition ? '<span>🔒 ' + i.unlock_condition + '</span>' : ''}
+                        </div>
+                    </div>
+                `).join('') : '';
+
+            // Update capacity
+            updateCapacity(committed);
+
+        } catch(e) {
+            console.error('Ideas error:', e);
+        }
+    }
+
+    // ===== ADD IDEA =====
+    document.getElementById('idea-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!db) return alert('Not connected to database');
+
+        const title = document.getElementById('idea-title').value;
+        const time = parseInt(document.getElementById('idea-time').value);
+        const desc = document.getElementById('idea-desc').value;
+
+        await db.from('ideas').insert([{
+            title,
+            time_estimate: time,
+            description: desc,
+            status: 'queue',
+            created_at: new Date().toISOString()
+        }]);
+
+        document.getElementById('idea-form').reset();
+        loadIdeas();
+    });
+
+    // ===== UPDATE IDEA =====
+    async function updateIdea(id, status) {
+        if (!db) return;
+        await db.from('ideas').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+        loadIdeas();
+    }
+
+    async function lockIdea(id) {
+        const condition = prompt('What needs to happen to unlock this? (e.g., "YouTube hits 5K subs")');
+        if (!db) return;
+        await db.from('ideas').update({ 
+            status: 'locked', 
+            unlock_condition: condition || '',
+            updated_at: new Date().toISOString() 
+        }).eq('id', id);
+        loadIdeas();
+    }
+
+    // ===== CAPACITY =====
+    function updateCapacity(committed) {
+        const total = 120; // 2 hours
+        const used = committed.reduce((sum, i) => sum + (i.time_estimate || 0), 0);
+        const pct = Math.min((used / total) * 100, 100);
+        const over = used > total;
+
+        const display = document.getElementById('capacity-display');
+
+        if (committed.length === 0) {
+            display.innerHTML = `
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.5rem;">
+                    <span>0 / ${total} min used</span>
+                    <span style="color:var(--green);">100% free</span>
+                </div>
+                <div class="capacity-bar-container">
+                    <div class="capacity-bar" style="width:0%;background:var(--green);"></div>
+                </div>
+                <div class="empty" style="padding:1rem 0;">No committed ideas yet</div>
+            `;
+            return;
+        }
+
+        display.innerHTML = `
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.5rem;">
+                <span>${used} / ${total} min used</span>
+                <span style="color:${over ? 'var(--red)' : 'var(--green)'};">${over ? 'OVER CAPACITY' : Math.round(100-pct) + '% free'}</span>
+            </div>
+            <div class="capacity-bar-container">
+                <div class="capacity-bar" style="width:${pct}%;background:${over ? 'linear-gradient(90deg,var(--red),#ff4444)' : 'linear-gradient(90deg,var(--accent),var(--pink))'};"></div>
+            </div>
+            ${committed.map(i => `
+                <div class="capacity-item">
+                    <span class="capacity-item-title">${i.title}</span>
+                    <span class="capacity-item-time">${i.time_estimate} min</span>
+                </div>
+            `).join('')}
+        `;
+    }
+
+    // ===== INIT =====
+    loadPlatformStats();
+    loadContent();
+    loadIdeas();
+
+    // Auto-refresh every 60 seconds
+    setInterval(() => {
+        loadPlatformStats();
+        loadContent();
+        loadIdeas();
+    }, 60000);
+</script>
+
+</body>
+</html>
