@@ -107,24 +107,31 @@ export async function GET(
       : provider === "podcast"
         ? exchangeSpotifyPodcastCodeForTokens(code, redirectUri)
         : exchangeTikTokCodeForTokens(code, redirectUri));
-    const identity = await (provider === "youtube"
-      ? fetchYouTubeChannelIdentity(tokens.access_token)
-      : provider === "podcast"
-        ? fetchSpotifyPodcastIdentity(tokens.access_token)
-        : fetchTikTokIdentity(tokens.access_token));
+    let externalAccountId: string;
+    let externalUsername: string;
+    if (provider === "youtube") {
+      const yt = await fetchYouTubeChannelIdentity(tokens.access_token);
+      externalAccountId = yt.channelId;
+      externalUsername = yt.username;
+    } else if (provider === "podcast") {
+      const spot = await fetchSpotifyPodcastIdentity(tokens.access_token);
+      externalAccountId = spot.accountId;
+      externalUsername = spot.username;
+    } else {
+      const tt = await fetchTikTokIdentity(tokens.access_token);
+      externalAccountId = tt.accountId;
+      externalUsername = tt.username;
+    }
     const tokenExpiresAtDate = new Date(now);
     tokenExpiresAtDate.setSeconds(tokenExpiresAtDate.getSeconds() + tokens.expires_in);
     const tokenExpiresAt = tokenExpiresAtDate.toISOString();
-
-    const accountId =
-      provider === "youtube" ? identity.channelId : identity.accountId;
 
     const { error } = await supabase
       .from("platform_connections")
       .update({
         status: "connected",
-        external_account_id: accountId,
-        external_username: identity.username,
+        external_account_id: externalAccountId,
+        external_username: externalUsername,
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token ?? null,
         token_expires_at: tokenExpiresAt,
