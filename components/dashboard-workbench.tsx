@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { analyzeIdea, getClarifyingTurn } from "@/app/(app)/dashboard/actions";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  analyzeIdea,
+  getClarifyingTurn,
+  recordFirstContentIdeaSubmitted,
+} from "@/app/(app)/dashboard/actions";
 
 type Feasibility = "green" | "yellow" | "red";
 
@@ -101,8 +106,26 @@ const DEFAULT_BASELINE = {
   contentStyle: "authentic and performance-driven",
 };
 
-export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string | null }) {
+export function DashboardWorkbench({
+  latestPostedAt,
+  suppressInactivityAlert = false,
+}: {
+  latestPostedAt: string | null;
+  suppressInactivityAlert?: boolean;
+}) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const ideaCaptureSent = useRef(false);
+
+  const captureFirstIdea = () => {
+    if (ideaCaptureSent.current) {
+      return;
+    }
+    ideaCaptureSent.current = true;
+    void recordFirstContentIdeaSubmitted().then(() => {
+      router.refresh();
+    });
+  };
   const [ideaInput, setIdeaInput] = useState("");
   const [step, setStep] = useState<"idea" | "clarify" | "result">("idea");
   const [chat, setChat] = useState<ChatTurn[]>([]);
@@ -198,7 +221,7 @@ export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string 
 
   return (
     <section className="grid gap-4 md:grid-cols-2">
-      {shouldShowInactivityAlert && (
+      {shouldShowInactivityAlert && !suppressInactivityAlert && (
         <article className="md:col-span-2 rounded-2xl border border-rose-500/50 bg-rose-600/15 p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-300">
             Action required
@@ -296,7 +319,7 @@ export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string 
         </div>
       </article>
 
-      <article className="rounded-2xl border bg-surface-muted/70 p-5">
+      <article id="idea-pressure-cooker" className="rounded-2xl border bg-surface-muted/70 p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Idea pressure cooker</h2>
           <span className="rounded-full bg-accent/15 px-2 py-1 text-xs text-accent">
@@ -348,6 +371,7 @@ export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string 
                     setPersisted,
                     setRepeatTipNote,
                   });
+                  captureFirstIdea();
                   setAnalysisResult({ idea: ideaInput.trim(), analysis });
                   setStep("result");
                   setShowThinkNote(false);
@@ -442,6 +466,7 @@ export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string 
                         setRepeatTipNote,
                       });
 
+                      captureFirstIdea();
                       setAnalysisResult({ idea: ideaInput.trim(), analysis });
                       setStep("result");
                       setShowThinkNote(false);
@@ -558,6 +583,7 @@ export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string 
               <button
                 type="button"
                 onClick={() => {
+                  captureFirstIdea();
                   const scheduled = createPlannedScheduleItem(analysisResult);
                   setPersisted((prev) => ({
                     ...prev,
@@ -578,6 +604,7 @@ export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string 
               <button
                 type="button"
                 onClick={() => {
+                  captureFirstIdea();
                   setPersisted((prev) => ({
                     ...prev,
                     savedIdeas: [
@@ -623,6 +650,7 @@ export function DashboardWorkbench({ latestPostedAt }: { latestPostedAt: string 
                 <button
                   type="button"
                   onClick={() => {
+                    captureFirstIdea();
                     setPersisted((prev) => ({
                       ...prev,
                       savedIdeas: [

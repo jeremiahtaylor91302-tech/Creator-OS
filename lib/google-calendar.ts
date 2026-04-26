@@ -25,6 +25,17 @@ type TokenResponse = {
   token_type: string;
 };
 
+/** Thrown when the Calendar API rejects the bearer token (often fixed by refreshing). */
+export class GoogleCalendarApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, body: string) {
+    super(`Google Calendar API error (${status}): ${body}`);
+    this.name = "GoogleCalendarApiError";
+    this.status = status;
+  }
+}
+
 type GoogleEvent = {
   summary?: string;
   description?: string;
@@ -40,6 +51,22 @@ export type WeeklyCalendarStats = {
   trackedHours: number;
   trackedEvents: number;
   publishingEvents: number;
+};
+
+export type WeeklyCalendarScheduleItem = {
+  id: string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  durationMinutes: number;
+  kind: "publish" | "production" | "editing" | "other";
+  isContent: boolean;
+};
+
+export type WeeklyCalendarSnapshot = {
+  stats: WeeklyCalendarStats;
+  schedule: WeeklyCalendarScheduleItem[];
+  contentDueByType: Array<{ type: string; count: number }>;
 };
 
 function requiredEnv(name: string) {
@@ -93,10 +120,15 @@ export async function exchangeGoogleCodeForTokens(code: string, redirectUri: str
 }
 
 export async function refreshGoogleAccessToken(refreshToken: string) {
+  const trimmed = refreshToken.trim();
+  if (!trimmed) {
+    throw new Error("Google token refresh failed: empty refresh_token");
+  }
+
   const body = new URLSearchParams({
     client_id: getGoogleClientId(),
     client_secret: getGoogleClientSecret(),
-    refresh_token: refreshToken,
+    refresh_token: trimmed,
     grant_type: "refresh_token",
   });
 
@@ -118,6 +150,41 @@ export async function fetchWeeklyCalendarStats(
   timeMin: string,
   timeMax: string,
 ): Promise<WeeklyCalendarStats> {
+  const snapshot = await fetchWeeklyCalendarSnapshot(accessToken, timeMin, timeMax);
+  return snapshot.stats;
+}
+
+function classifyEvent(summary: string, description: string): {
+  kind: WeeklyCalendarScheduleItem["kind"];
+  isContent: boolean;
+  isPublishing: boolean;
+} {
+  const blob = `${summary} ${description}`.toLowerCase();
+  const isContent = CONTENT_KEYWORDS.some((keyword) => blob.includes(keyword));
+
+  if (blob.includes("publish") || blob.includes("upload") || blob.includes("post")) {
+    return { kind: "publish", isContent, isPublishing: true };
+  }
+  if (
+    blob.includes("film") ||
+    blob.includes("record") ||
+    blob.includes("shoot") ||
+    blob.includes("youtube")
+  ) {
+    return { kind: "production", isContent, isPublishing: false };
+  }
+  if (blob.includes("edit") || blob.includes("editing")) {
+    return { kind: "editing", isContent, isPublishing: false };
+  }
+
+  return { kind: "other", isContent, isPublishing: false };
+}
+
+export async function fetchWeeklyCalendarSnapshot(
+  accessToken: string,
+  timeMin: string,
+  timeMax: string,
+): Promise<WeeklyCalendarSnapshot> {
   const url = new URL("https://www.googleapis.com/calendar/v3/calendars/primary/events");
   url.searchParams.set("timeMin", timeMin);
   url.searchParams.set("timeMax", timeMax);
@@ -133,7 +200,11 @@ export async function fetchWeeklyCalendarStats(
   });
 
   if (!response.ok) {
-    throw new Error(`Google Calendar events fetch failed: ${await response.text()}`);
+    const body = await response.text();
+    if (response.status === 401) {
+      throw new GoogleCalendarApiError(401, body);
+    }
+    throw new Error(`Google Calendar events fetch failed: ${body}`);
   }
 
   const payload = (await response.json()) as GoogleEventsResponse;
@@ -142,14 +213,18 @@ export async function fetchWeeklyCalendarStats(
   let trackedMinutes = 0;
   let trackedEvents = 0;
   let publishingEvents = 0;
+  const schedule: WeeklyCalendarScheduleItem[] = [];
+  const contentTypeCounts: Record<string, number> = {
+    Publish: 0,
+    Production: 0,
+    Editing: 0,
+    Other: 0,
+  };
 
-  for (const event of items) {
-    const summary = event.summary?.toLowerCase() ?? "";
-    const description = event.description?.toLowerCase() ?? "";
-    const blob = `${summary} ${description}`;
-    const matches = CONTENT_KEYWORDS.some((keyword) => blob.includes(keyword));
-    if (!matches) continue;
-
+  for (let index = 0; index < items.length; index += 1) {
+    const event = items[index];
+    const summary = event.summary?.trim() ?? "Untitled event";
+    const description = event.description?.trim() ?? "";
     const start = event.start?.dateTime ?? event.start?.date;
     const end = event.end?.dateTime ?? event.end?.date;
     if (!start || !end) continue;
@@ -159,17 +234,41 @@ export async function fetchWeeklyCalendarStats(
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) continue;
 
     const minutes = Math.max(0, (endDate.getTime() - startDate.getTime()) / (1000 * 60));
-    trackedMinutes += minutes;
-    trackedEvents += 1;
+    const classification = classifyEvent(summary, description);
 
-    if (summary.includes("publish") || summary.includes("upload") || summary.includes("post")) {
+    schedule.push({
+      id: `${startDate.toISOString()}-${index}`,
+      title: summary,
+      startsAt: startDate.toISOString(),
+      endsAt: endDate.toISOString(),
+      durationMinutes: Math.round(minutes),
+      kind: classification.kind,
+      isContent: classification.isContent,
+    });
+
+    if (classification.isContent) {
+      trackedMinutes += minutes;
+      trackedEvents += 1;
+      if (classification.kind === "publish") contentTypeCounts.Publish += 1;
+      else if (classification.kind === "production") contentTypeCounts.Production += 1;
+      else if (classification.kind === "editing") contentTypeCounts.Editing += 1;
+      else contentTypeCounts.Other += 1;
+    }
+
+    if (classification.isPublishing) {
       publishingEvents += 1;
     }
   }
 
   return {
-    trackedHours: Number((trackedMinutes / 60).toFixed(2)),
-    trackedEvents,
-    publishingEvents,
+    stats: {
+      trackedHours: Number((trackedMinutes / 60).toFixed(2)),
+      trackedEvents,
+      publishingEvents,
+    },
+    schedule,
+    contentDueByType: Object.entries(contentTypeCounts)
+      .filter(([, count]) => count > 0)
+      .map(([type, count]) => ({ type, count })),
   };
 }

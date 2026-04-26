@@ -1,6 +1,6 @@
 import { OauthConnectLink } from "@/components/oauth-connect-link";
 import type { Platform } from "@/lib/platforms";
-import { isTrackingPlatform, PLATFORM_LABELS, TRACKING_PLATFORM_LABELS } from "@/lib/platforms";
+import { isPlatform, isTrackingPlatform, PLATFORM_LABELS, TRACKING_PLATFORM_LABELS } from "@/lib/platforms";
 
 type ConnectionStatus = "connected" | "pending" | "failed" | "not connected";
 
@@ -68,6 +68,27 @@ const cardShadowIdle = "[box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.02)]";
 const connectCtaClassName =
   "mt-4 inline-flex w-full cursor-pointer touch-manipulation items-center justify-center rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black no-underline shadow-sm transition hover:bg-accent-strong hover:shadow-md active:scale-[0.98] active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
+/** What creators actually see after connecting — no generic “unlock metrics” copy. */
+const PLATFORM_BENEFIT_COPY: Partial<Record<Platform, string>> = {
+  youtube: "Track subscribers, views, and which videos are driving growth.",
+  tiktok: "See what's blowing up — views, likes, and follower trends.",
+  instagram: "Monitor your reach, reels performance, and audience growth.",
+  twitter: "Track impressions, engagement, and what's resonating.",
+};
+
+function benefitLine(platform: Platform | string, comingSoon: boolean): string | null {
+  if (platform === "podcast") {
+    return null;
+  }
+  if (isPlatform(platform)) {
+    return PLATFORM_BENEFIT_COPY[platform] ?? null;
+  }
+  if (comingSoon) {
+    return "We're still building this connection — your toggle stays ready for launch.";
+  }
+  return "Connect when this integration goes live.";
+}
+
 export function PlatformConnectionCard({
   platform,
   status,
@@ -77,6 +98,10 @@ export function PlatformConnectionCard({
   actionDisabled = false,
   comingSoon = false,
 }: PlatformConnectionCardProps) {
+  if (platform === "podcast") {
+    return null;
+  }
+
   const theme =
     platformTheme[platform as Platform] ??
     trackingOnlyTheme[typeof platform === "string" ? platform : ""] ??
@@ -86,6 +111,7 @@ export function PlatformConnectionCard({
       ? TRACKING_PLATFORM_LABELS[platform]
       : PLATFORM_LABELS[platform as Platform] ?? "Platform";
   const normalizedHandle = handle ? handle.replace(/^@+/, "") : null;
+  const benefit = benefitLine(platform, comingSoon);
   const statusDot =
     status === "connected"
       ? "bg-emerald-400"
@@ -118,7 +144,13 @@ export function PlatformConnectionCard({
         </div>
       </div>
 
-      <p className="mt-3 truncate text-[11px] text-muted-foreground">
+      {benefit ? (
+        <p className="mt-3 text-pretty text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
+          {benefit}
+        </p>
+      ) : null}
+
+      <p className="mt-2 truncate text-[11px] text-muted-foreground">
         {comingSoon ? "Not available yet" : normalizedHandle ? `@${normalizedHandle}` : "Not connected"}
       </p>
 

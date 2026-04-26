@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { fetchYouTubeTopVideos } from "@/lib/analytics/youtube";
+import { syncOnboardingCompletionState } from "@/lib/onboarding";
 
 type BrandBaseline = {
   niche: string;
@@ -435,4 +436,103 @@ function tokenize(value: string) {
       .split(/[^a-z0-9]+/)
       .filter((token) => token.length > 2),
   );
+}
+
+export async function registerDashboardOnboardingVisit() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false as const };
+  }
+
+  const { data: row } = await supabase
+    .from("profiles")
+    .select("onboarding_completed, onboarding_dashboard_visits")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!row || row.onboarding_completed) {
+    return { ok: true as const };
+  }
+
+  const nextVisits = (Number(row.onboarding_dashboard_visits) || 0) + 1;
+
+  await supabase
+    .from("profiles")
+    .update({ onboarding_dashboard_visits: nextVisits })
+    .eq("id", user.id);
+
+  await syncOnboardingCompletionState(user.id);
+  return { ok: true as const };
+}
+
+export async function addDashboardOnboardingSeconds(deltaSeconds: number) {
+  const safeDelta = Math.min(120, Math.max(0, Math.floor(deltaSeconds)));
+  if (safeDelta === 0) {
+    return { ok: true as const };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false as const };
+  }
+
+  const { data: row } = await supabase
+    .from("profiles")
+    .select("onboarding_completed, onboarding_dashboard_seconds")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!row || row.onboarding_completed) {
+    return { ok: true as const };
+  }
+
+  const nextSeconds = Math.min(
+    86400,
+    (Number(row.onboarding_dashboard_seconds) || 0) + safeDelta,
+  );
+
+  await supabase
+    .from("profiles")
+    .update({ onboarding_dashboard_seconds: nextSeconds })
+    .eq("id", user.id);
+
+  await syncOnboardingCompletionState(user.id);
+  return { ok: true as const };
+}
+
+export async function recordFirstContentIdeaSubmitted() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { ok: false as const };
+  }
+
+  const { data: row } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!row || row.onboarding_completed) {
+    return { ok: true as const };
+  }
+
+  await supabase
+    .from("profiles")
+    .update({ onboarding_step_idea: true })
+    .eq("id", user.id);
+
+  await syncOnboardingCompletionState(user.id);
+  return { ok: true as const };
 }

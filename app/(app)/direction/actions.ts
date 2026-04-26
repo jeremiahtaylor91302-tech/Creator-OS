@@ -1,6 +1,8 @@
 "use server";
 
 import { generateMusicRoadmap } from "@/lib/ai/music-roadmap";
+import { createClient } from "@/lib/supabase/server";
+import { syncOnboardingCompletionState } from "@/lib/onboarding";
 
 export async function createRoadmap(formData: FormData) {
   const direction = formData.get("direction")?.toString().trim() || "Music";
@@ -23,6 +25,20 @@ export async function createRoadmap(formData: FormData) {
     strengths,
     goals,
   });
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    await supabase
+      .from("profiles")
+      .update({ creator_goal: goals })
+      .eq("id", user.id);
+
+    await syncOnboardingCompletionState(user.id);
+  }
 
   return roadmap;
 }

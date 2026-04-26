@@ -91,11 +91,26 @@ export async function GET(request: Request) {
     const tokens = await exchangeGoogleCodeForTokens(code, redirectUri);
     const tokenExpiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
+    const { data: existingConnection } = await supabase
+      .from("google_calendar_connections")
+      .select("refresh_token")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const incomingRefresh =
+      typeof tokens.refresh_token === "string" ? tokens.refresh_token.trim() : "";
+    const priorRefresh =
+      typeof existingConnection?.refresh_token === "string"
+        ? existingConnection.refresh_token.trim()
+        : "";
+    // Google often omits refresh_token on repeat consent; never wipe an existing one.
+    const mergedRefreshToken = incomingRefresh || priorRefresh || null;
+
     await supabase.from("google_calendar_connections").upsert(
       {
         user_id: user.id,
         access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token ?? null,
+        refresh_token: mergedRefreshToken,
         token_expires_at: tokenExpiresAt,
         scope: tokens.scope ?? null,
         status: "connected",
