@@ -9,20 +9,6 @@ export function AuthForm() {
 
   return (
     <form className="mt-6 space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="email" className="text-sm text-muted-foreground">
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none ring-accent/40 focus:ring"
-          placeholder="you@example.com"
-        />
-      </div>
       {mode === "sign-up" ? (
         <div className="space-y-2">
           <label htmlFor="full_name" className="text-sm text-muted-foreground">
@@ -42,6 +28,20 @@ export function AuthForm() {
           </p>
         </div>
       ) : null}
+      <div className="space-y-2">
+        <label htmlFor="email" className="text-sm text-muted-foreground">
+          Email
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none ring-accent/40 focus:ring"
+          placeholder="you@example.com"
+        />
+      </div>
       <div className="space-y-2">
         <label htmlFor="password" className="text-sm text-muted-foreground">
           Password
@@ -68,20 +68,34 @@ export function AuthForm() {
       </div>
       <div className="flex gap-3">
         <button
-          formAction={signIn}
+          type="button"
           onClick={() => setMode("sign-in")}
-          className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong"
+          className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+            mode === "sign-in"
+              ? "bg-accent text-white hover:bg-accent-strong"
+              : "border hover:bg-white/5"
+          }`}
         >
           Sign in
         </button>
         <button
-          formAction={signUp}
+          type="button"
           onClick={() => setMode("sign-up")}
-          className="flex-1 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-white/5"
+          className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+            mode === "sign-up"
+              ? "bg-accent text-white hover:bg-accent-strong"
+              : "border hover:bg-white/5"
+          }`}
         >
           Create account
         </button>
       </div>
+      <button
+        formAction={mode === "sign-up" ? signUp : signIn}
+        className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong"
+      >
+        {mode === "sign-up" ? "Create account" : "Sign in"}
+      </button>
     </form>
   );
 }
