@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0c10;
+  --foreground: #ececf1;
+  --surface: #12141a;
+  --surface-muted: #171a22;
+  --border: #222632;
+  --accent: #c084fc;
+  --accent-strong: #c084fc;
+  --muted-foreground: #9aa3b2;
+}
+
+:root[data-theme="dark"] {
+  --background: #0b0c10;
+  --foreground: #ececf1;
+  --surface: #12141a;
+  --surface-muted: #171a22;
+  --border: #222632;
+  --accent: #c084fc;
+  --accent-strong: #c084fc;
+  --muted-foreground: #9aa3b2;
+}
+
+:root[data-theme="pink"] {
+  --background: #fff4fa;
+  --foreground: #35152f;
+  --surface: #fffdfd;
+  --surface-muted: #ffeaf5;
+  --border: #f5cbe3;
+  --accent: #ec4899;
+  --accent-strong: #db2777;
+  --muted-foreground: #915174;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-muted-foreground: var(--muted-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  background-image: radial-gradient(
+      circle at 14% 4%,
+      rgba(192, 132, 252, 0.16),
+      transparent 34%
+    ),
+    radial-gradient(circle at 88% 16%, rgba(168, 85, 247, 0.14), transparent 28%);
+  letter-spacing: 0.01em;
+  font-weight: 450;
+}
+
+a {
+  color: inherit;
+}
+
+* {
+  border-color: var(--border);
+}
