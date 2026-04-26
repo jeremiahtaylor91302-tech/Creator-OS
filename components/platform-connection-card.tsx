@@ -1,5 +1,6 @@
+import { OauthConnectLink } from "@/components/oauth-connect-link";
 import type { Platform } from "@/lib/platforms";
-import { PLATFORM_LABELS } from "@/lib/platforms";
+import { isTrackingPlatform, PLATFORM_LABELS, TRACKING_PLATFORM_LABELS } from "@/lib/platforms";
 
 type ConnectionStatus = "connected" | "pending" | "failed" | "not connected";
 
@@ -10,6 +11,8 @@ type PlatformConnectionCardProps = {
   actionHref: string;
   actionLabel: string;
   actionDisabled?: boolean;
+  /** When true, show Coming soon badge and block the connect CTA (non-preview users). */
+  comingSoon?: boolean;
 };
 
 const platformTheme: Record<
@@ -41,6 +44,17 @@ const platformTheme: Record<
   },
 };
 
+const trackingOnlyTheme: Record<string, { glow: string; iconBg: string }> = {
+  pinterest: {
+    glow: "rgba(236,236,241,0.16)",
+    iconBg: "bg-rose-600/15 text-rose-200",
+  },
+  substack: {
+    glow: "rgba(236,236,241,0.16)",
+    iconBg: "bg-orange-500/15 text-orange-200",
+  },
+};
+
 const fallbackTheme = {
   glow: "rgba(236,236,241,0.16)",
   iconBg: "bg-zinc-500/15 text-zinc-300",
@@ -51,6 +65,9 @@ const cardShadowConnected =
   "[box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.05),inset_0_0_22px_-14px_rgba(236,236,241,0.14),0_10px_24px_-22px_rgba(255,255,255,0.1)]";
 const cardShadowIdle = "[box-shadow:inset_0_0_0_1px_rgba(255,255,255,0.02)]";
 
+const connectCtaClassName =
+  "mt-4 inline-flex w-full cursor-pointer touch-manipulation items-center justify-center rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black no-underline shadow-sm transition hover:bg-accent-strong hover:shadow-md active:scale-[0.98] active:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
 export function PlatformConnectionCard({
   platform,
   status,
@@ -58,9 +75,16 @@ export function PlatformConnectionCard({
   actionHref,
   actionLabel,
   actionDisabled = false,
+  comingSoon = false,
 }: PlatformConnectionCardProps) {
-  const theme = platformTheme[platform as Platform] ?? fallbackTheme;
-  const label = PLATFORM_LABELS[platform as Platform] ?? "Platform";
+  const theme =
+    platformTheme[platform as Platform] ??
+    trackingOnlyTheme[typeof platform === "string" ? platform : ""] ??
+    fallbackTheme;
+  const label =
+    typeof platform === "string" && isTrackingPlatform(platform)
+      ? TRACKING_PLATFORM_LABELS[platform]
+      : PLATFORM_LABELS[platform as Platform] ?? "Platform";
   const normalizedHandle = handle ? handle.replace(/^@+/, "") : null;
   const statusDot =
     status === "connected"
@@ -76,34 +100,40 @@ export function PlatformConnectionCard({
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-md ${theme.iconBg}`}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${theme.iconBg}`}
           >
             <PlatformBrandIcon platform={platform} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-sm font-medium">{label}</span>
-            <span className={`h-2 w-2 rounded-full ${statusDot}`} />
+            <span className={`h-2 w-2 shrink-0 rounded-full ${statusDot}`} />
+            {comingSoon ? (
+              <span className="rounded-full border border-border/80 bg-background/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Coming soon
+              </span>
+            ) : null}
           </div>
         </div>
       </div>
 
       <p className="mt-3 truncate text-[11px] text-muted-foreground">
-        {normalizedHandle ? `@${normalizedHandle}` : "Not connected"}
+        {comingSoon ? "Not available yet" : normalizedHandle ? `@${normalizedHandle}` : "Not connected"}
       </p>
 
-      {actionDisabled ? (
+      {comingSoon ? (
+        <span className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg border border-border/80 bg-background/40 px-3 py-2 text-sm font-semibold text-muted-foreground">
+          Coming soon
+        </span>
+      ) : actionDisabled ? (
         <span className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg bg-accent/30 px-3 py-2 text-sm font-semibold text-muted-foreground">
           {actionLabel}
         </span>
       ) : (
-        <a
-          href={actionHref}
-          className="mt-4 inline-flex w-full touch-manipulation items-center justify-center rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-black no-underline transition hover:opacity-90 active:opacity-90"
-        >
+        <OauthConnectLink href={actionHref} className={connectCtaClassName}>
           {actionLabel}
-        </a>
+        </OauthConnectLink>
       )}
     </article>
   );
@@ -168,6 +198,27 @@ function PlatformBrandIcon({ platform }: { platform: Platform | string }) {
           fill="#9333EA"
           d="M12 2a10 10 0 0 0-6.9 17.3l2-2A7 7 0 1 1 17 17.3l2 2A10 10 0 0 0 12 2Zm0 4a6 6 0 0 0-4.2 10.3l2-2A3 3 0 1 1 14.2 14l2 2A6 6 0 0 0 12 6Zm0 4a2 2 0 0 0-1.4 3.4l.6.6-.8 6h3.2l-.8-6 .6-.6A2 2 0 0 0 12 10Z"
         />
+      </svg>
+    );
+  }
+
+  if (platform === "pinterest") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="#E60023" />
+        <path
+          fill="#fff"
+          d="M12 6.5c-2.9 0-5.3 2.1-5.3 4.7 0 2 1.1 3.7 2.7 4.3-.1-.7-.2-1.8 0-2.6.2-.9 1.3-5.8 1.3-5.8s-.3-.6-.3-1.5c0-1.4.8-2.4 1.8-2.4.8 0 1.2.6 1.2 1.4 0 .9-.6 2.2-.9 3.4-.3 1 .6 1.8 1.7 1.8 2 0 3.6-2.1 3.6-5.2 0-2.7-1.9-4.6-4.6-4.6Z"
+        />
+      </svg>
+    );
+  }
+
+  if (platform === "substack") {
+    return (
+      <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2" fill="#FF6719" />
+        <path fill="#fff" d="M6 8h12v1.5H6V8Zm0 3h9v1.5H6V11Zm0 3h12v1.5H6V14Z" opacity="0.95" />
       </svg>
     );
   }

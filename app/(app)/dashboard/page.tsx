@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   getPlatformConnectionsByUser,
   getPlatformSetupHint,
 } from "@/lib/connections";
-import { PLATFORMS } from "@/lib/platforms";
+import { platformIsComingSoonForUser } from "@/lib/integration-access";
+import { isPlatform, parseTrackedPlatformsFromDb, TRACKING_PLATFORMS } from "@/lib/platforms";
 import { DashboardWorkbench } from "@/components/dashboard-workbench";
 import { PlatformConnectionCard } from "@/components/platform-connection-card";
 import { fetchYouTubeTopVideos } from "@/lib/analytics/youtube";
@@ -22,9 +22,22 @@ export default async function DashboardPage() {
 
   const { connections, error } = await getPlatformConnectionsByUser(user.id);
   const connectionMap = new Map(connections.map((conn) => [conn.platform, conn]));
-  const connectedCount = connections.filter((conn) => conn.status === "connected").length;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("tracked_platforms")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const trackedPlatforms = parseTrackedPlatformsFromDb(profile?.tracked_platforms);
+  const trackedSet = new Set(trackedPlatforms);
+  const visibleTrackingIds = TRACKING_PLATFORMS.filter((id) => trackedSet.has(id));
+
+  const connectedCount = connections.filter(
+    (conn) => conn.status === "connected" && trackedSet.has(conn.platform),
+  ).length;
   const setupHint = getPlatformSetupHint(error);
-  const youtubeConnection = connectionMap.get("youtube");
+  const youtubeConnection = trackedSet.has("youtube") ? connectionMap.get("youtube") : undefined;
   let latestPostedAt: string | null = null;
 
   if (youtubeConnection?.status === "connected" && youtubeConnection.access_token) {
@@ -56,7 +69,21 @@ export default async function DashboardPage() {
         </section>
       )}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-        {PLATFORMS.map((platform) => {
+        {visibleTrackingIds.map((platform) => {
+          if (!isPlatform(platform)) {
+            return (
+              <PlatformConnectionCard
+                key={platform}
+                platform={platform}
+                status="not connected"
+                handle={null}
+                actionHref="#"
+                actionLabel="Connect"
+                comingSoon
+              />
+            );
+          }
+
           const connection = connectionMap.get(platform);
           const status = connection?.status ?? "not connected";
           const isConnected = connection?.status === "connected";
@@ -70,6 +97,7 @@ export default async function DashboardPage() {
               ? "Open"
               : "Reconnect"
             : "Connect";
+          const oauthComingSoon = platformIsComingSoonForUser(platform, user.email);
           return (
             <PlatformConnectionCard
               key={platform}
@@ -78,6 +106,7 @@ export default async function DashboardPage() {
               handle={connection?.external_username ?? null}
               actionHref={actionHref}
               actionLabel={actionLabel}
+              comingSoon={oauthComingSoon}
             />
           );
         })}
@@ -85,13 +114,6 @@ export default async function DashboardPage() {
 
       <DashboardWorkbench latestPostedAt={latestPostedAt} />
       <CalendarProductionProgress />
-
-      <Link
-        href="/settings"
-        className="inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition hover:opacity-90"
-      >
-        Open Settings
-      </Link>
     </div>
   );
 }

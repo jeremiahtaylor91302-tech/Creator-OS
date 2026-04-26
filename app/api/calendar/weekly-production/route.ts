@@ -22,14 +22,38 @@ function getWeekBounds() {
   };
 }
 
+function emptyStats(connected: boolean, budgetHours: number, calendarStatsUnavailable: boolean) {
+  return {
+    connected,
+    budgetHours,
+    trackedHours: 0,
+    trackedEvents: 0,
+    publishingEvents: 0,
+    calendarStatsUnavailable,
+  };
+}
+
 export async function GET() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let budgetHours = 2;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("weekly_time_budget_hours")
+      .eq("id", user.id)
+      .maybeSingle();
+    const rawBudget = profile?.weekly_time_budget_hours;
+    if (typeof rawBudget === "number" && Number.isFinite(rawBudget) && rawBudget >= 0.5) {
+      budgetHours = rawBudget;
+    }
+  }
+
   if (!user) {
-    return NextResponse.json({ connected: false, trackedHours: 0, trackedEvents: 0, publishingEvents: 0 });
+    return NextResponse.json(emptyStats(false, budgetHours, false));
   }
 
   const { data: connection } = await supabase
@@ -38,8 +62,12 @@ export async function GET() {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!connection || connection.status !== "connected" || !connection.access_token) {
-    return NextResponse.json({ connected: false, trackedHours: 0, trackedEvents: 0, publishingEvents: 0 });
+  if (
+    !connection ||
+    String(connection.status) !== "connected" ||
+    !connection.access_token
+  ) {
+    return NextResponse.json(emptyStats(false, budgetHours, false));
   }
 
   let accessToken = connection.access_token as string;
@@ -60,8 +88,18 @@ export async function GET() {
         })
         .eq("user_id", user.id);
     } catch {
-      return NextResponse.json({ connected: false, trackedHours: 0, trackedEvents: 0, publishingEvents: 0 });
+      return NextResponse.json({
+        ...emptyStats(true, budgetHours, true),
+        lastCalendarError: "Could not refresh Google Calendar token.",
+      });
     }
+  }
+
+  if (tokenExpired && !connection.refresh_token) {
+    return NextResponse.json({
+      ...emptyStats(true, budgetHours, true),
+      lastCalendarError: "Google Calendar session expired. Reconnect in Settings.",
+    });
   }
 
   try {
@@ -69,9 +107,14 @@ export async function GET() {
     const stats = await fetchWeeklyCalendarStats(accessToken, timeMin, timeMax);
     return NextResponse.json({
       connected: true,
+      budgetHours,
+      calendarStatsUnavailable: false,
       ...stats,
     });
   } catch {
-    return NextResponse.json({ connected: false, trackedHours: 0, trackedEvents: 0, publishingEvents: 0 });
+    return NextResponse.json({
+      ...emptyStats(true, budgetHours, true),
+      lastCalendarError: "Could not load calendar events this week.",
+    });
   }
 }

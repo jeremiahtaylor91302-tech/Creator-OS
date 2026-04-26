@@ -10,9 +10,10 @@ create table if not exists public.user_access (
 
 create index if not exists idx_user_access_user_id on public.user_access(user_id);
 
+drop trigger if exists set_user_access_updated_at on public.user_access;
 create trigger set_user_access_updated_at
 before update on public.user_access
-for each row execute procedure public.handle_updated_at();
+for each row execute function public.handle_updated_at();
 
 alter table public.user_access enable row level security;
 

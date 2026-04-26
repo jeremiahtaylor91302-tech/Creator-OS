@@ -4,12 +4,14 @@ import {
   getPlatformConnectionsByUser,
   getPlatformSetupHint,
 } from "@/lib/connections";
-import { PLATFORMS } from "@/lib/platforms";
+import { platformIsComingSoonForUser } from "@/lib/integration-access";
+import { isPlatform, parseTrackedPlatformsFromDb, TRACKING_PLATFORMS } from "@/lib/platforms";
 import { formatOAuthError, formatOAuthSuccess } from "@/utils/oauth-message";
 import { PlatformConnectionCard } from "@/components/platform-connection-card";
 import { BrandBaselineSettings } from "@/components/brand-baseline-settings";
 import { TimeBudgetSettings } from "@/components/time-budget-settings";
 import { GoogleCalendarConnectButton } from "@/components/google-calendar-connect-button";
+import { TrackedPlatformsForm } from "@/components/tracked-platforms-form";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -39,6 +41,22 @@ export default async function SettingsPage(props: { searchParams: SearchParams }
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("tracked_platforms, weekly_time_budget_hours")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const trackedPlatforms = parseTrackedPlatformsFromDb(profile?.tracked_platforms);
+  const weeklyTimeBudgetHours =
+    typeof profile?.weekly_time_budget_hours === "number" &&
+    Number.isFinite(profile.weekly_time_budget_hours) &&
+    profile.weekly_time_budget_hours >= 0.5
+      ? profile.weekly_time_budget_hours
+      : 2;
+  const trackedSet = new Set(trackedPlatforms);
+  const visibleTrackingIds = TRACKING_PLATFORMS.filter((id) => trackedSet.has(id));
+
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border bg-gradient-to-br from-surface to-surface-muted p-6">
@@ -65,12 +83,38 @@ export default async function SettingsPage(props: { searchParams: SearchParams }
       )}
 
       <section className="rounded-2xl border bg-surface-muted/70 p-5">
+        <h2 className="text-lg font-semibold">Platforms to track</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Turn channels on or off for your dashboard and connections. Pinterest and Substack are opt-in
+          until integrations ship.
+        </p>
+        <TrackedPlatformsForm
+          key={trackedPlatforms.join(",")}
+          initialTracked={trackedPlatforms}
+        />
+      </section>
+
+      <section className="rounded-2xl border bg-surface-muted/70 p-5">
         <h2 className="text-lg font-semibold">Connections</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Connect or reconnect social accounts here.
+          Connect or reconnect accounts for the platforms you&apos;re tracking.
         </p>
         <div className="mt-4 space-y-3">
-          {PLATFORMS.map((platform) => {
+          {visibleTrackingIds.map((platform) => {
+            if (!isPlatform(platform)) {
+              return (
+                <PlatformConnectionCard
+                  key={platform}
+                  platform={platform}
+                  status="not connected"
+                  handle={null}
+                  actionHref="/settings"
+                  actionLabel="Connect"
+                  comingSoon
+                />
+              );
+            }
+
             const connection = connectionMap.get(platform);
             const status = connection?.status ?? "not connected";
             const connected = status === "connected";
@@ -78,6 +122,7 @@ export default async function SettingsPage(props: { searchParams: SearchParams }
               connected && platform === "youtube" ? "Open" : connected ? "Reconnect" : "Connect";
             const actionHref =
               connected && platform === "youtube" ? "/youtube" : `/oauth/${platform}/start`;
+            const oauthComingSoon = platformIsComingSoonForUser(platform, user.email);
 
             return (
               <PlatformConnectionCard
@@ -87,6 +132,7 @@ export default async function SettingsPage(props: { searchParams: SearchParams }
                 handle={connection?.external_username ?? null}
                 actionHref={actionHref}
                 actionLabel={actionLabel}
+                comingSoon={oauthComingSoon}
               />
             );
           })}
@@ -139,7 +185,10 @@ export default async function SettingsPage(props: { searchParams: SearchParams }
         </div>
       </section>
 
-      <TimeBudgetSettings />
+      <TimeBudgetSettings
+        key={weeklyTimeBudgetHours}
+        initialHours={weeklyTimeBudgetHours}
+      />
       <BrandBaselineSettings />
     </div>
   );

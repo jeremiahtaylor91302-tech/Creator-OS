@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Overview" },
-  { href: "/academy", label: "Creator Academy" },
+  { href: "/academy", label: "Creator Academy", comingSoon: true },
   { href: "/direction", label: "Direction" },
   { href: "/settings", label: "Settings" },
 ];
@@ -40,7 +40,14 @@ export function AppSidebar() {
                   : "text-muted-foreground hover:bg-surface-muted hover:text-foreground",
               ].join(" ")}
             >
-              {item.label}
+              <span className="inline-flex items-center gap-2">
+                <span>{item.label}</span>
+                {item.comingSoon ? (
+                  <span className="rounded-full border border-border/80 bg-background/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    On the way
+                  </span>
+                ) : null}
+              </span>
             </Link>
           );
         })}

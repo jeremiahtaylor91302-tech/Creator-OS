@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { resolveAppBaseUrlFromRequest } from "@/lib/app-base-url";
 import { createClient } from "@/lib/supabase/server";
+import { platformIsComingSoonForUser } from "@/lib/integration-access";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
 import { buildYouTubeOAuthUrl } from "@/lib/oauth/youtube";
 import { buildSpotifyPodcastOAuthUrl } from "@/lib/oauth/spotify-podcast";
@@ -32,8 +34,17 @@ export async function GET(
     return NextResponse.redirect(new URL("/auth/sign-in?error=Please%20sign%20in", request.url));
   }
 
+  if (platformIsComingSoonForUser(provider, user.email)) {
+    return NextResponse.redirect(
+      new URL(
+        `/settings?error=${encodeURIComponent("This platform connection is coming soon.")}`,
+        request.url,
+      ),
+    );
+  }
+
   const state = createState(provider);
-  const callbackUrl = new URL(`/oauth/${provider}/callback`, request.url).toString();
+  const callbackUrl = `${resolveAppBaseUrlFromRequest(request)}/oauth/${provider}/callback`;
 
   if (provider !== "youtube" && provider !== "podcast" && provider !== "tiktok") {
     return NextResponse.redirect(

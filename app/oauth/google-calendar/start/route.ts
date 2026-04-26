@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
+import { resolveAppBaseUrlFromRequest } from "@/lib/app-base-url";
 import { createClient } from "@/lib/supabase/server";
 import { buildGoogleCalendarOAuthUrl } from "@/lib/google-calendar";
+import {
+  GOOGLE_CALENDAR_OAUTH_STATE_COOKIE,
+  googleCalendarOAuthStateCookieOptions,
+} from "@/lib/google-calendar-oauth-state";
 
 function createState() {
   return `google-calendar:${crypto.randomUUID()}`;
-}
-
-function resolveAppBaseUrl(request: Request) {
-  const configured = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL;
-  if (configured) {
-    return configured.replace(/\/+$/, "");
-  }
-  return new URL(request.url).origin;
 }
 
 export async function GET(request: Request) {
@@ -25,7 +22,7 @@ export async function GET(request: Request) {
   }
 
   const state = createState();
-  const callbackUrl = `${resolveAppBaseUrl(request)}/oauth/google-calendar/callback`;
+  const callbackUrl = `${resolveAppBaseUrlFromRequest(request)}/oauth/google-calendar/callback`;
 
   const { error: upsertError } = await supabase.from("google_calendar_connections").upsert(
     {
@@ -50,7 +47,9 @@ export async function GET(request: Request) {
 
   try {
     const authorizationUrl = buildGoogleCalendarOAuthUrl(state, callbackUrl);
-    return NextResponse.redirect(authorizationUrl);
+    const response = NextResponse.redirect(authorizationUrl);
+    response.cookies.set(GOOGLE_CALENDAR_OAUTH_STATE_COOKIE, state, googleCalendarOAuthStateCookieOptions());
+    return response;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Google Calendar OAuth is not configured.";

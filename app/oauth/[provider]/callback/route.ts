@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { resolveAppBaseUrlFromRequest } from "@/lib/app-base-url";
 import { createClient } from "@/lib/supabase/server";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
 import {
@@ -98,7 +99,7 @@ export async function GET(
     );
   }
 
-  const redirectUri = new URL(`/oauth/${provider}/callback`, request.url).toString();
+  const redirectUri = `${resolveAppBaseUrlFromRequest(request)}/oauth/${provider}/callback`;
   const now = new Date();
 
   try {

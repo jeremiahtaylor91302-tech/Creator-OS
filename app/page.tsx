@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { blogPostSummaries } from "@/lib/blog/posts";
+import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -17,8 +18,8 @@ export default async function Home(props: { searchParams: SearchParams }) {
   const publicSuffix = isVisitorView ? "?visitor=1" : "";
 
   return (
-    <main className="min-h-screen max-w-[100vw] overflow-x-clip px-4 pb-24 pt-6 sm:px-6 sm:pb-10 sm:pt-8 md:px-10 md:pb-12 md:pt-12">
-      <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 md:gap-12">
+    <main className="flex min-h-screen max-w-[100vw] flex-col overflow-x-clip px-4 pb-10 pt-6 sm:px-6 sm:pb-12 sm:pt-8 md:px-10 md:pb-14 md:pt-12">
+      <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col gap-6 md:gap-12">
         <LandingHeader
           publicSuffix={publicSuffix}
           showLoggedInNav={showLoggedInNav}
@@ -124,13 +125,19 @@ export default async function Home(props: { searchParams: SearchParams }) {
         </section>
 
         <section className="space-y-4 sm:space-y-5">
-          <div>
+          <div className="hidden md:block">
             <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">From the blog</p>
             <h3 className="mt-2 text-balance text-lg font-semibold sm:text-xl md:text-2xl">
               Learn the playbook behind the product
             </h3>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
+          <Link
+            href={`/blog${publicSuffix}`}
+            className="inline-flex min-h-[52px] w-full items-center gap-2 rounded-xl border border-border/80 bg-surface/80 px-4 py-3 text-sm font-semibold text-foreground no-underline transition hover:border-accent/40 hover:bg-surface-muted/50 md:hidden"
+          >
+            From the blog <span className="text-accent">→</span>
+          </Link>
+          <div className="hidden grid-cols-1 gap-3 sm:gap-4 md:grid md:grid-cols-3">
             {blogPostSummaries.map((post) => {
               const href = `/blog/${post.slug}`;
               return (
@@ -164,7 +171,7 @@ export default async function Home(props: { searchParams: SearchParams }) {
               Ready to stop disappearing on your audience?
             </h3>
             <Link
-              href="/pricing"
+              href={`/pricing${publicSuffix}`}
               className="inline-flex h-12 w-full shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-accent to-accent-strong px-5 text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.99] md:h-auto md:w-auto md:rounded-lg md:py-3 md:active:scale-100"
             >
               Get lifetime access for $59
@@ -172,6 +179,8 @@ export default async function Home(props: { searchParams: SearchParams }) {
           </div>
         </section>
       </div>
+
+      <LandingFooter publicSuffix={publicSuffix} />
     </main>
   );
 }

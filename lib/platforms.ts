@@ -1,3 +1,4 @@
+/** Platforms with OAuth / `platform_connections` rows today. */
 export const PLATFORMS = [
   "youtube",
   "tiktok",
@@ -8,12 +9,35 @@ export const PLATFORMS = [
 
 export type Platform = (typeof PLATFORMS)[number];
 
+/** All channels users can opt into tracking in Settings (includes future integrations). */
+export const TRACKING_PLATFORMS = [
+  "youtube",
+  "tiktok",
+  "instagram",
+  "twitter",
+  "podcast",
+  "pinterest",
+  "substack",
+] as const;
+
+export type TrackingPlatform = (typeof TRACKING_PLATFORMS)[number];
+
 export const PLATFORM_LABELS: Record<Platform, string> = {
   youtube: "YouTube",
   tiktok: "TikTok",
   instagram: "Instagram",
   twitter: "Twitter/X",
   podcast: "Podcasts",
+};
+
+export const TRACKING_PLATFORM_LABELS: Record<TrackingPlatform, string> = {
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  twitter: "Twitter/X",
+  podcast: "Podcasts",
+  pinterest: "Pinterest",
+  substack: "Substack",
 };
 
 export const PLATFORM_COLORS: Record<Platform, string> = {
@@ -23,3 +47,31 @@ export const PLATFORM_COLORS: Record<Platform, string> = {
   twitter: "bg-blue-500/20 text-blue-200",
   podcast: "bg-amber-500/20 text-amber-200",
 };
+
+export function isPlatform(value: string): value is Platform {
+  return PLATFORMS.includes(value as Platform);
+}
+
+export function isTrackingPlatform(value: string): value is TrackingPlatform {
+  return TRACKING_PLATFORMS.includes(value as TrackingPlatform);
+}
+
+/** Default when DB value is missing or invalid (Pinterest & Substack off until toggled). */
+export const DEFAULT_TRACKED_PLATFORMS: TrackingPlatform[] = [
+  "youtube",
+  "tiktok",
+  "instagram",
+  "twitter",
+  "podcast",
+];
+
+/** Parse `profiles.tracked_platforms` with stable canonical ordering. */
+export function parseTrackedPlatformsFromDb(value: unknown): TrackingPlatform[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    return [...DEFAULT_TRACKED_PLATFORMS];
+  }
+  const picked = value.filter((v): v is TrackingPlatform => typeof v === "string" && isTrackingPlatform(v));
+  const unique = [...new Set(picked)];
+  const ordered = TRACKING_PLATFORMS.filter((p) => unique.includes(p));
+  return ordered.length > 0 ? ordered : [...DEFAULT_TRACKED_PLATFORMS];
+}

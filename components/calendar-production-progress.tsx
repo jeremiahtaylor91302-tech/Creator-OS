@@ -2,28 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const TIME_BUDGET_KEY = "creatoros-time-budget";
-
 type WeeklyStats = {
   connected: boolean;
+  budgetHours: number;
   trackedHours: number;
   trackedEvents: number;
   publishingEvents: number;
+  calendarStatsUnavailable?: boolean;
+  lastCalendarError?: string;
+};
+
+const defaultStats: WeeklyStats = {
+  connected: false,
+  budgetHours: 2,
+  trackedHours: 0,
+  trackedEvents: 0,
+  publishingEvents: 0,
 };
 
 export function CalendarProductionProgress() {
-  const [budgetHours] = useState(() => {
-    if (typeof window === "undefined") return 2;
-    const raw = localStorage.getItem(TIME_BUDGET_KEY);
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 2;
-  });
-  const [stats, setStats] = useState<WeeklyStats>({
-    connected: false,
-    trackedHours: 0,
-    trackedEvents: 0,
-    publishingEvents: 0,
-  });
+  const [stats, setStats] = useState<WeeklyStats>(defaultStats);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,7 +35,14 @@ export function CalendarProductionProgress() {
 
       const data = (await response.json()) as WeeklyStats;
       if (!cancelled) {
-        setStats(data);
+        setStats({
+          ...defaultStats,
+          ...data,
+          budgetHours:
+            typeof data.budgetHours === "number" && Number.isFinite(data.budgetHours) && data.budgetHours >= 0.5
+              ? data.budgetHours
+              : 2,
+        });
       }
     }
 
@@ -46,6 +51,8 @@ export function CalendarProductionProgress() {
       cancelled = true;
     };
   }, []);
+
+  const budgetHours = stats.budgetHours;
 
   const usageRatio = useMemo(() => {
     if (budgetHours <= 0) return 0;
@@ -64,14 +71,21 @@ export function CalendarProductionProgress() {
         ? "bg-amber-400"
         : "bg-rose-400";
 
+  const statusLabel = stats.connected
+    ? stats.calendarStatsUnavailable
+      ? "Connected · calendar data unavailable"
+      : "Google Calendar connected"
+    : "Calendar not connected";
+
   return (
     <section className="rounded-2xl border bg-surface-muted/70 p-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">Calendar production tracking</h2>
-        <span className="text-xs text-muted-foreground">
-          {stats.connected ? "Google Calendar connected" : "Calendar not connected"}
-        </span>
+        <span className="shrink-0 text-right text-xs text-muted-foreground">{statusLabel}</span>
       </div>
+      {stats.connected && stats.calendarStatsUnavailable && stats.lastCalendarError ? (
+        <p className="mt-2 text-xs text-amber-200/90">{stats.lastCalendarError}</p>
+      ) : null}
       <p className="mt-1 text-sm text-muted-foreground">
         Weekly production budget: {budgetHours.toFixed(1)}h (film + edit + publish).
       </p>
