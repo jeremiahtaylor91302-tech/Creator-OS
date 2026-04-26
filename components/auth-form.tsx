@@ -94,7 +94,7 @@ export function AuthForm() {
         formAction={mode === "sign-up" ? signUp : signIn}
         className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong"
       >
-        {mode === "sign-up" ? "Create account" : "Sign in"}
+        Continue
       </button>
     </form>
   );
